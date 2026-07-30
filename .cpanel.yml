@@ -1,6 +1,8 @@
 ---
 deployment:
   tasks:
-    # App is served directly from this repo's /public (see DEPLOY.md), so no
-    # file copying is needed — just make sure Laravel's writable dirs are writable.
-    - /bin/chmod -R 775 /home/manifold/repositories/manifold-timer/storage /home/manifold/repositories/manifold-timer/bootstrap/cache
+    # Deploy tasks run from the repository root, so use relative paths (works
+    # regardless of the repo folder name). App is served from this repo's
+    # /public, so no file copying is needed — just ensure Laravel's writable
+    # dirs are writable.
+    - /bin/chmod -R 775 storage bootstrap/cache
