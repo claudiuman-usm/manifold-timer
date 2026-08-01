@@ -267,12 +267,71 @@
         }
 
         // Per-kid local anchors so countdowns tick smoothly between polls.
+        // `cycles` starts null so the first (seed) apply only sets a baseline —
+        // we notify on later polls when completed_cycles_today climbs past it.
         const kids = {};
-        document.querySelectorAll('.live').forEach(c => kids[c.dataset.kid] = { card: c, state: null, anchor: performance.now() });
+        document.querySelectorAll('.live').forEach(c => kids[c.dataset.kid] = {
+            card: c, state: null, anchor: performance.now(), cycles: null,
+            name: c.querySelector('.live-name')?.textContent.trim() || 'A kid',
+        });
+
+        /* ---- Cycle-finished alerts (OS notification + chime) ---------------- */
+
+        let audioCtx = null;
+        function chime() {
+            try {
+                audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                // Two soft rising tones.
+                [[660, 0], [880, 0.16]].forEach(([freq, at]) => {
+                    const t = audioCtx.currentTime + at;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.0001, t);
+                    gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+                    osc.connect(gain).connect(audioCtx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.4);
+                });
+            } catch (e) {}
+        }
+
+        function notifyCycleFinished(name) {
+            chime();
+            if ('Notification' in window && Notification.permission === 'granted') {
+                const n = new Notification('Manifold Timer', {
+                    body: `${name} finished their work cycle — break time!`,
+                    tag: 'cycle-' + name + '-' + Date.now(),
+                    requireInteraction: true,
+                });
+                n.onclick = () => { window.focus(); n.close(); };
+            }
+        }
+
+        // Ask once on load; retry on first interaction for browsers that need a
+        // user gesture, and unlock the AudioContext at the same time.
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().catch(() => {});
+        }
+        function unlock() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().catch(() => {});
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        document.addEventListener('click', unlock, { once: true });
 
         function apply(id, state) {
             const k = kids[id];
             if (!k) return;
+            // Detect a newly-completed work cycle (skip the initial seed).
+            if (k.cycles !== null && state.completed_cycles_today > k.cycles) {
+                notifyCycleFinished(k.name);
+            }
+            k.cycles = state.completed_cycles_today;
             k.state = state; k.anchor = performance.now();
             const q = sel => k.card.querySelector(`[data-role=${sel}]`);
             q('pill').className = 'pill ' + state.phase;

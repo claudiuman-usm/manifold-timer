@@ -8,5 +8,5 @@ return [
     'parent_pin' => env('PARENT_PIN', '0000'),
 
     // App version — surfaced in the UI and CHANGELOG.
-    'version' => '1.3.0',
+    'version' => '1.4.0',
 ];

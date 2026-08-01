@@ -3,6 +3,24 @@
 All notable changes to Manifold Timer are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-08-01
+
+### Added — parent alerts when a kid finishes a work cycle
+- The **parent dashboard** now alerts you the moment a kid completes their work
+  phase and is pushed into a forced break. It fires a desktop **OS notification**
+  ("_{kid} finished their work cycle — break time!_") plus a soft **chime**.
+- Detection is driven by the dashboard's existing 3-second state poll — when a
+  kid's `completed_cycles_today` ticks up, the alert fires. No polling of its own,
+  no schema change, no server change.
+- Notifications work even when the dashboard tab is in the background. The browser
+  asks for notification permission once (on load, retried on first click); if it
+  is denied, the chime still plays while the tab is open.
+- The initial page load only sets a baseline, so already-completed cycles from
+  earlier in the day don't re-alert on refresh.
+
+### Notes
+- No database change.
+
 ## [1.3.0] — 2026-07-30
 
 ### Added — single PIN gate (app is no longer publicly browsable)
