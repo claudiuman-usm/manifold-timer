@@ -3,14 +3,21 @@
 All notable changes to Manifold Timer are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] — 2026-08-01
+
+### Changed
+- Removed the emoji from the feedback widget (bug / sparkle / thumb icons). The
+  Glitch / Idea / Fixed / Resolved labels are now plain **colour-coded chips**,
+  matching the app's restrained icon style.
+
 ## [1.6.0] — 2026-08-01
 
 ### Added — feedback chat (kids report glitches / ideas, parent replies)
 - A **floating chat button** (bottom-right) on both the **kid timer** and the
-  **parent dashboard**. Kids tap it, pick **🐞 Glitch** or **✨ Idea**, and send a
+  **parent dashboard**. Kids tap it, pick **Glitch** or **Idea**, and send a
   report; the parent reads every kid's reports, **replies**, and **marks them
   resolved**. It's a real two-way chat — the kid sees the parent's replies and a
-  **✓ Fixed** chip once resolved.
+  **Fixed** chip once resolved.
 - **Unread badges** on both floating buttons: the parent's counts new kid
   messages; each kid's counts new parent replies. Opening the panel clears it.
   The widgets poll (parent 5s, kid 8s) and only re-render when data changes, so a

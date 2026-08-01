@@ -10,7 +10,7 @@
     <div class="fb-head">
         <div>
             <h3>Kids' reports</h3>
-            <p>Glitches 🐞 &amp; ideas ✨ from the kids</p>
+            <p>Glitches &amp; ideas from the kids</p>
         </div>
         <button class="fb-close" id="fbClose" type="button" aria-label="Close">&times;</button>
     </div>
@@ -70,8 +70,8 @@
             <div class="fb-thread ${t.resolved ? 'resolved' : ''}" data-id="${t.id}">
                 <div class="fb-thread-head">
                     <span class="fb-kidtag" style="color:${esc(t.color)}">${esc(t.kid)}</span>
-                    <span class="fb-chip ${t.type}">${t.type === 'glitch' ? '🐞 Glitch' : '✨ Idea'}</span>
-                    ${t.resolved ? '<span class="fb-chip resolved">✓ Resolved</span>' : ''}
+                    <span class="fb-chip ${t.type}">${t.type === 'glitch' ? 'Glitch' : 'Idea'}</span>
+                    ${t.resolved ? '<span class="fb-chip resolved">Resolved</span>' : ''}
                 </div>
                 ${t.messages.map(m => `
                     <div class="fb-msg ${m.sender}">${esc(m.body)}<span class="fb-when">${fmtWhen(m.at)}</span></div>
@@ -82,7 +82,7 @@
                 </div>
                 <div class="fb-thread-actions">
                     <button class="fb-mini ${t.resolved ? 'done' : ''}" type="button" data-resolve="${t.id}">
-                        ${t.resolved ? '↩ Reopen' : '✓ Mark resolved'}
+                        ${t.resolved ? 'Reopen' : 'Mark resolved'}
                     </button>
                 </div>
             </div>`).join('')

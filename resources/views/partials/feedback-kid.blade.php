@@ -10,18 +10,18 @@
     <div class="fb-head">
         <div>
             <h3>Report a problem or idea</h3>
-            <p>Tell us about a glitch 🐞 or an idea ✨</p>
+            <p>Tell us about a glitch or share an idea</p>
         </div>
         <button class="fb-close" id="fbClose" type="button" aria-label="Close">&times;</button>
     </div>
     <div class="fb-body" id="fbBody"></div>
     <div class="fb-foot">
         <div class="fb-types">
-            <button class="fb-type glitch"  type="button" data-type="glitch">🐞 Glitch</button>
-            <button class="fb-type feature" type="button" data-type="feature">✨ Idea</button>
+            <button class="fb-type glitch"  type="button" data-type="glitch">Glitch</button>
+            <button class="fb-type feature" type="button" data-type="feature">Idea</button>
         </div>
         <div class="fb-compose">
-            <textarea id="fbText" rows="1" placeholder="Pick 🐞 or ✨, then type…" maxlength="1000"></textarea>
+            <textarea id="fbText" rows="1" placeholder="Choose a type, then type your message…" maxlength="1000"></textarea>
             <button class="fb-send" id="fbSend" type="button" disabled aria-label="Send">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 9-18 9 4-9-4-9zm4.6 9L5.2 6.6 15.9 12 5.2 17.4 7.6 12z"/></svg>
             </button>
@@ -74,14 +74,14 @@
     function render() {
         renderBadge();
         if (!threads.length) {
-            body.innerHTML = '<div class="fb-empty">No reports yet.<br>Found a bug or have an idea? Tell us below 👇</div>';
+            body.innerHTML = '<div class="fb-empty">No reports yet.<br>Found a problem or have an idea? Send it below.</div>';
             return;
         }
         body.innerHTML = threads.map(t => `
             <div class="fb-thread ${t.resolved ? 'resolved' : ''}">
                 <div class="fb-thread-head">
-                    <span class="fb-chip ${t.type}">${t.type === 'glitch' ? '🐞 Glitch' : '✨ Idea'}</span>
-                    ${t.resolved ? '<span class="fb-chip resolved">✓ Fixed</span>' : ''}
+                    <span class="fb-chip ${t.type}">${t.type === 'glitch' ? 'Glitch' : 'Idea'}</span>
+                    ${t.resolved ? '<span class="fb-chip resolved">Fixed</span>' : ''}
                 </div>
                 ${t.messages.map(m => `
                     <div class="fb-msg ${m.sender}">${esc(m.body)}<span class="fb-when">${fmtWhen(m.at)}</span></div>
