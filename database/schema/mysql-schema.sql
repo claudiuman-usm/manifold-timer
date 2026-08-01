@@ -71,6 +71,37 @@ CREATE TABLE `timer_sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
+CREATE TABLE `feedback_threads` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kid_id`      BIGINT UNSIGNED NOT NULL,
+  `type`        ENUM('glitch','feature') NOT NULL,
+  `resolved_at` TIMESTAMP NULL DEFAULT NULL,          -- NULL = open
+  `created_at`  TIMESTAMP NULL DEFAULT NULL,
+  `updated_at`  TIMESTAMP NULL DEFAULT NULL,
+  `deleted_at`  TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `feedback_threads_kid_id_resolved_at_index` (`kid_id`, `resolved_at`),
+  CONSTRAINT `feedback_threads_kid_id_foreign`
+    FOREIGN KEY (`kid_id`) REFERENCES `kids` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+CREATE TABLE `feedback_messages` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `thread_id`  BIGINT UNSIGNED NOT NULL,
+  `sender`     ENUM('kid','parent') NOT NULL,
+  `body`       TEXT NOT NULL,
+  `read_at`    TIMESTAMP NULL DEFAULT NULL,           -- when the recipient saw it
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  `deleted_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `feedback_messages_thread_id_sender_index` (`thread_id`, `sender`),
+  CONSTRAINT `feedback_messages_thread_id_foreign`
+    FOREIGN KEY (`thread_id`) REFERENCES `feedback_threads` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
 -- Seed data (edit names/PINs after import; PINs must be bcrypt hashes).
 INSERT INTO `categories` (`name`, `active`, `created_at`, `updated_at`)
 VALUES ('Game', 1, NOW(), NOW()),
@@ -98,3 +129,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 --   ADD COLUMN `work_minutes`  INT UNSIGNED NULL DEFAULT NULL AFTER `dark_mode`,
 --   ADD COLUMN `break_minutes` INT UNSIGNED NULL DEFAULT NULL AFTER `work_minutes`,
 --   ADD COLUMN `cutoff_time`   TIME NULL DEFAULT NULL AFTER `break_minutes`;
+
+-- v1.6.0 — feedback chat (glitch / feature reports). Run on an existing install
+-- to add the two new tables. Also available as a ready-to-import file at
+-- deploy/feedback-tables.sql. Skip if the CREATE TABLEs above already ran.
+-- CREATE TABLE `feedback_threads` ( … );   -- see the CREATE section above
+-- CREATE TABLE `feedback_messages` ( … );  -- see the CREATE section above

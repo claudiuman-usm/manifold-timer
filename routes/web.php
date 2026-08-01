@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\KidAuthController;
 use App\Http\Controllers\KidController;
+use App\Http\Controllers\KidFeedbackController;
 use App\Http\Controllers\ParentAuthController;
 use App\Http\Controllers\ParentController;
+use App\Http\Controllers\ParentFeedbackController;
 use Illuminate\Support\Facades\Route;
 
 /* ---------------------------------------------------------------- */
@@ -24,6 +26,11 @@ Route::middleware('kid')->prefix('kid')->name('kid.')->group(function () {
     Route::post('/theme', [KidController::class, 'toggleTheme'])->name('theme');
     Route::post('/change-pin', [KidController::class, 'changePin'])->name('changePin');
     Route::get('/history', [KidController::class, 'history'])->name('history');
+
+    // Feedback chat (glitch / feature reports)
+    Route::get('/feedback', [KidFeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback', [KidFeedbackController::class, 'store'])->name('feedback.store');
+    Route::post('/feedback/seen', [KidFeedbackController::class, 'seen'])->name('feedback.seen');
 });
 
 /* ---------------------------------------------------------------- */
@@ -50,4 +57,10 @@ Route::middleware('parent')->prefix('parent')->name('parent.')->group(function (
 
     Route::patch('/sessions/{session}', [ParentController::class, 'updateSession'])->name('sessions.update');
     Route::delete('/sessions/{session}', [ParentController::class, 'destroySession'])->name('sessions.destroy');
+
+    // Feedback chat (read kids' reports, reply, resolve)
+    Route::get('/feedback', [ParentFeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback/{thread}/reply', [ParentFeedbackController::class, 'reply'])->name('feedback.reply');
+    Route::post('/feedback/{thread}/resolve', [ParentFeedbackController::class, 'resolve'])->name('feedback.resolve');
+    Route::post('/feedback/seen', [ParentFeedbackController::class, 'seen'])->name('feedback.seen');
 });

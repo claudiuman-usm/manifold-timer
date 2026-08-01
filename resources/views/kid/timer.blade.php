@@ -462,4 +462,6 @@
     })();
     </script>
     @endpush
+
+    @include('partials.feedback-kid')
 @endsection

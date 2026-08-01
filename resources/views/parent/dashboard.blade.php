@@ -492,4 +492,6 @@
     })();
     </script>
     @endpush
+
+    @include('partials.feedback-parent')
 @endsection

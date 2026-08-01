@@ -38,4 +38,9 @@ class Kid extends Model
     {
         return $this->hasMany(TimerSession::class);
     }
+
+    public function feedbackThreads(): HasMany
+    {
+        return $this->hasMany(FeedbackThread::class);
+    }
 }
