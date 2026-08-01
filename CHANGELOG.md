@@ -3,6 +3,12 @@
 All notable changes to Manifold Timer are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] — 2026-08-01
+
+### Changed
+- The notification bell now uses a **solid SVG icon** matching the app's existing
+  icon set (borderless, muted, accent on hover), replacing the emoji 🔔.
+
 ## [1.5.0] — 2026-08-01
 
 ### Added — notification bell with cycle-completion history

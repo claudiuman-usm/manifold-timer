@@ -19,8 +19,8 @@
         </div>
         <div style="display:flex; gap:10px; align-items:center">
             <div class="bell-wrap">
-                <button class="btn btn-ghost bell-btn" id="bellBtn" type="button" aria-label="Notifications" aria-expanded="false">
-                    <span class="bell-ico">🔔</span>
+                <button class="bell-btn" id="bellBtn" type="button" aria-label="Notifications" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
                     <span class="bell-badge" id="bellBadge" hidden>0</span>
                 </button>
                 <div class="bell-panel" id="bellPanel" hidden>
@@ -238,8 +238,15 @@
     <style>
         /* Notification bell */
         .bell-wrap { position: relative; }
-        .bell-btn { position: relative; padding: 10px 12px; min-height: 44px; line-height: 1; }
-        .bell-ico { font-size: 1.15rem; }
+        .bell-btn {
+            position: relative; background: none; border: 0; margin: 0; padding: 8px; cursor: pointer;
+            color: var(--text-muted); line-height: 0; border-radius: 12px;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: color .15s ease, transform .06s ease;
+        }
+        .bell-btn svg { width: 24px; height: 24px; fill: currentColor; display: block; }
+        .bell-btn:hover, .bell-btn[aria-expanded="true"] { color: var(--accent); }
+        .bell-btn:active { transform: scale(.9); }
         .bell-badge {
             position: absolute; top: 2px; right: 2px;
             min-width: 18px; height: 18px; padding: 0 5px;
