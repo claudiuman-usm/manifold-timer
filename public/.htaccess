@@ -5,6 +5,17 @@
 
     RewriteEngine On
 
+    # Force HTTPS for page loads. Session cookies are Secure
+    # (SESSION_SECURE_COOKIE=true), so a device reaching the site over plain http
+    # silently drops the session cookie and the next POST /enter fails CSRF (419).
+    # Redirect only GET/HEAD: a 301 on a POST downgrades it to GET, and /enter is
+    # POST-only, which would return 405. Once the gate loads over https the form
+    # posts to https directly, so POST never needs redirecting.
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
