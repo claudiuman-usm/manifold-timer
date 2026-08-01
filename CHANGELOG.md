@@ -3,6 +3,23 @@
 All notable changes to Manifold Timer are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] — 2026-08-01
+
+### Added — notification bell with cycle-completion history
+- A **🔔 bell** in the parent dashboard top bar keeps a running **history** of
+  every completed work cycle (last 7 days), so you never miss one even if the OS
+  desktop notification was blocked, muted, or dismissed.
+- A red **unread badge** appears the moment a kid finishes a cycle while you're on
+  the dashboard; opening the bell clears it. Each entry shows the kid's accent
+  colour, name, and when it happened ("just now" → "12 min ago" → date + time).
+- The history is **server-backed** (derived from `break` sessions), so it survives
+  page reloads and is accurate regardless of whether the dashboard was open when a
+  cycle finished. No schema change — it reads existing session rows.
+- The existing OS notification + chime still fire alongside the bell.
+
+### Notes
+- No database change.
+
 ## [1.4.0] — 2026-08-01
 
 ### Added — parent alerts when a kid finishes a work cycle

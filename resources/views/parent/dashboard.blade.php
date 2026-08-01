@@ -17,7 +17,20 @@
             <span class="dot"></span>
             <div>Parent dashboard <small>Manifold Timer v{{ config('timer.version') }}</small></div>
         </div>
-        <div style="display:flex; gap:10px">
+        <div style="display:flex; gap:10px; align-items:center">
+            <div class="bell-wrap">
+                <button class="btn btn-ghost bell-btn" id="bellBtn" type="button" aria-label="Notifications" aria-expanded="false">
+                    <span class="bell-ico">🔔</span>
+                    <span class="bell-badge" id="bellBadge" hidden>0</span>
+                </button>
+                <div class="bell-panel" id="bellPanel" hidden>
+                    <div class="bell-head">
+                        <span>Notifications</span>
+                        <span class="muted" id="bellSub">last 7 days</span>
+                    </div>
+                    <div class="bell-list" id="bellList"></div>
+                </div>
+            </div>
             <a class="btn btn-ghost" href="{{ route('parent.reports') }}">Reports</a>
             <form method="POST" action="{{ route('parent.logout') }}">@csrf
                 <button class="btn btn-ghost" type="submit">Log out</button>
@@ -223,6 +236,35 @@
     </div>
 
     <style>
+        /* Notification bell */
+        .bell-wrap { position: relative; }
+        .bell-btn { position: relative; padding: 10px 12px; min-height: 44px; line-height: 1; }
+        .bell-ico { font-size: 1.15rem; }
+        .bell-badge {
+            position: absolute; top: 2px; right: 2px;
+            min-width: 18px; height: 18px; padding: 0 5px;
+            border-radius: 9px; background: var(--danger, #e5484d); color: #fff;
+            font-size: .72rem; font-weight: 800; line-height: 18px; text-align: center;
+        }
+        .bell-panel {
+            position: absolute; right: 0; top: calc(100% + 8px); z-index: 50;
+            width: 320px; max-width: 86vw; max-height: 60vh; overflow-y: auto;
+            background: var(--surface, #fff); border: 1px solid var(--border);
+            border-radius: 16px; box-shadow: 0 18px 45px rgba(0,0,0,.22); padding: 8px;
+        }
+        .bell-head { display: flex; align-items: baseline; justify-content: space-between;
+            padding: 8px 10px 10px; font-weight: 750; }
+        .bell-head .muted { font-size: .78rem; font-weight: 500; }
+        .bell-list { display: flex; flex-direction: column; gap: 2px; }
+        .bell-item { display: flex; gap: 10px; align-items: flex-start;
+            padding: 10px; border-radius: 12px; }
+        .bell-item.unread { background: var(--break-soft, rgba(120,120,255,.10)); }
+        .bell-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex: none; }
+        .bell-text { flex: 1; font-size: .9rem; line-height: 1.35; }
+        .bell-text b { font-weight: 750; }
+        .bell-when { display: block; color: var(--text-muted); font-size: .78rem; margin-top: 2px; }
+        .bell-empty { padding: 18px 12px; color: var(--text-muted); text-align: center; font-size: .9rem; }
+
         .live-head { display: flex; align-items: center; justify-content: space-between; }
         .live-name { font-size: 1.3rem; font-weight: 750; }
         .live-time { font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; margin: 6px 0 2px; }
@@ -273,6 +315,7 @@
         document.querySelectorAll('.live').forEach(c => kids[c.dataset.kid] = {
             card: c, state: null, anchor: performance.now(), cycles: null,
             name: c.querySelector('.live-name')?.textContent.trim() || 'A kid',
+            color: c.style.getPropertyValue('--accent').trim() || '#888',
         });
 
         /* ---- Cycle-finished alerts (OS notification + chime) ---------------- */
@@ -299,17 +342,79 @@
             } catch (e) {}
         }
 
-        function notifyCycleFinished(name) {
+        function notifyCycleFinished(k) {
             chime();
+            bell.add(k.name, new Date().toISOString(), k.color);
             if ('Notification' in window && Notification.permission === 'granted') {
                 const n = new Notification('Manifold Timer', {
-                    body: `${name} finished their work cycle — break time!`,
-                    tag: 'cycle-' + name + '-' + Date.now(),
+                    body: `${k.name} finished their work cycle — break time!`,
+                    tag: 'cycle-' + k.name + '-' + Date.now(),
                     requireInteraction: true,
                 });
                 n.onclick = () => { window.focus(); n.close(); };
             }
         }
+
+        /* ---- Notification bell (history + unread badge) -------------------- */
+
+        const bell = (function () {
+            const btn = document.getElementById('bellBtn');
+            const panel = document.getElementById('bellPanel');
+            const list = document.getElementById('bellList');
+            const badge = document.getElementById('bellBadge');
+            let items = @json($notifications).map(n => ({ ...n, unread: false }));
+            let unread = 0;
+            let open = false;
+
+            const esc = s => { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; };
+
+            function fmtWhen(iso) {
+                const d = new Date(iso), now = new Date();
+                const diff = (now - d) / 1000;
+                if (diff < 45) return 'just now';
+                if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+                const t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                return d.toDateString() === now.toDateString()
+                    ? 'today ' + t
+                    : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + t;
+            }
+
+            function render() {
+                badge.textContent = unread;
+                badge.hidden = unread === 0;
+                list.innerHTML = items.length
+                    ? items.map(n => `
+                        <div class="bell-item ${n.unread ? 'unread' : ''}">
+                            <span class="bell-dot" style="background:${esc(n.color)}"></span>
+                            <span class="bell-text"><b>${esc(n.kid)}</b> finished a work cycle
+                                <span class="bell-when">${fmtWhen(n.at)}</span></span>
+                        </div>`).join('')
+                    : '<div class="bell-empty">No completed cycles in the last 7 days.</div>';
+            }
+
+            function setOpen(v) {
+                open = v;
+                panel.hidden = !open;
+                btn.setAttribute('aria-expanded', String(open));
+                if (open) { unread = 0; items.forEach(n => n.unread = false); render(); }
+            }
+
+            btn.addEventListener('click', e => { e.stopPropagation(); setOpen(!open); });
+            document.addEventListener('click', e => {
+                if (open && !panel.contains(e.target) && !btn.contains(e.target)) setOpen(false);
+            });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && open) setOpen(false); });
+
+            render();
+
+            return {
+                add(kid, iso, color) {
+                    items.unshift({ kid, at: iso, color: color || '#888', unread: !open });
+                    if (!open) unread++;
+                    render();
+                },
+            };
+        })();
 
         // Ask once on load; retry on first interaction for browsers that need a
         // user gesture, and unlock the AudioContext at the same time.
@@ -329,7 +434,7 @@
             if (!k) return;
             // Detect a newly-completed work cycle (skip the initial seed).
             if (k.cycles !== null && state.completed_cycles_today > k.cycles) {
-                notifyCycleFinished(k.name);
+                notifyCycleFinished(k);
             }
             k.cycles = state.completed_cycles_today;
             k.state = state; k.anchor = performance.now();

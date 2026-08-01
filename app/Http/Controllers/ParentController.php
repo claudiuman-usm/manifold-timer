@@ -35,7 +35,34 @@ class ParentController extends Controller
             ]),
             'settings' => CycleSetting::current(),
             'categories' => Category::orderBy('name')->get(),
+            'notifications' => $this->recentCycleCompletions($kids),
         ]);
+    }
+
+    /**
+     * History for the notification bell: every completed work cycle over the
+     * last 7 days. A cycle completes exactly when a `break` session opens, so
+     * each break row is one "kid finished a cycle" event.
+     *
+     * @param  \Illuminate\Support\Collection<int,Kid>  $kids
+     * @return array<int,array{kid:string,kid_id:int,color:string,at:string}>
+     */
+    private function recentCycleCompletions($kids): array
+    {
+        $byId = $kids->keyBy('id');
+
+        return TimerSession::query()
+            ->where('phase', 'break')
+            ->where('started_at', '>=', Carbon::now()->subDays(7)->startOfDay())
+            ->orderByDesc('started_at')
+            ->get()
+            ->map(fn (TimerSession $s) => [
+                'kid' => $byId[$s->kid_id]->name ?? 'A kid',
+                'kid_id' => (int) $s->kid_id,
+                'color' => $byId[$s->kid_id]->color ?? '#888',
+                'at' => $s->started_at->toIso8601String(),
+            ])
+            ->all();
     }
 
     /** Live status of both kids, polled by the dashboard. */
