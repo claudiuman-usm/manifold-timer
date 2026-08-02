@@ -45,13 +45,16 @@ class CycleService
     /* ------------------------------------------------------------------ */
 
     /**
-     * Start a work segment for the kid in the given category.
+     * Start a work segment for the kid in the given categories. Multiple
+     * categories are stored as one combined label snapshot (e.g. "TV + iPad").
+     *
+     * @param  array<int>  $categoryIds
      *
      * @throws RuntimeException on any rule violation.
      */
-    public function startWork(Kid $kid, int $categoryId): TimerSession
+    public function startWork(Kid $kid, array $categoryIds): TimerSession
     {
-        return DB::transaction(function () use ($kid, $categoryId) {
+        return DB::transaction(function () use ($kid, $categoryIds) {
             // Lock the kid row so two rapid taps can't open two segments.
             Kid::whereKey($kid->getKey())->lockForUpdate()->first();
 
@@ -68,12 +71,19 @@ class CycleService
                 throw new RuntimeException('A timer is already running.');
             }
 
-            $category = Category::where('active', true)->findOrFail($categoryId);
+            $categories = Category::where('active', true)
+                ->whereIn('id', $categoryIds)
+                ->orderBy('name')
+                ->get();
+
+            if ($categories->isEmpty()) {
+                throw new RuntimeException('Pick at least one thing to play.');
+            }
 
             return TimerSession::create([
                 'kid_id' => $kid->id,
-                'category_id' => $category->id,
-                'category_name' => $category->name, // snapshot
+                'category_id' => $categories->first()->id,          // FK: first of the selection
+                'category_name' => $categories->pluck('name')->implode(' + '), // combined snapshot
                 'phase' => 'work',
                 'started_at' => $this->now(),
                 'ended_at' => null,

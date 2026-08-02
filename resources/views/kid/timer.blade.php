@@ -65,7 +65,7 @@
 
         {{-- WORK · IDLE --}}
         <div class="panel" data-panel="work-idle" hidden>
-            <p class="section-title" style="text-align:center">Pick what you're doing</p>
+            <p class="section-title" style="text-align:center">Pick what you're doing <span class="muted" style="font-weight:600">— tap all that apply</span></p>
             <div class="cats">
                 @foreach ($categories as $c)
                     <button class="cat" data-cat="{{ $c->id }}">{{ $c->name }}</button>
@@ -221,7 +221,7 @@
         let state = @json($state);
         let summary = @json($summary);
         let anchor = performance.now();   // client time when state was received
-        let chosenCat = null;
+        const chosenCats = new Set();     // ids of the categories tapped (multi-select)
         let busy = false;
 
         function fmt(total) {
@@ -421,19 +421,26 @@
             prevPhase = s.phase;
         }
 
-        // Category selection
+        // Category selection (multi-select: tap all that apply)
+        function clearChosen() {
+            chosenCats.clear();
+            document.querySelectorAll('.cat').forEach(b => b.setAttribute('aria-pressed', 'false'));
+            el.startBtn.disabled = true;
+        }
         document.querySelectorAll('.cat').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.cat').forEach(b => b.setAttribute('aria-pressed', 'false'));
-                btn.setAttribute('aria-pressed', 'true');
-                chosenCat = btn.dataset.cat;
-                el.startBtn.disabled = false;
+                const id = btn.dataset.cat;
+                const pressed = btn.getAttribute('aria-pressed') === 'true';
+                btn.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+                if (pressed) chosenCats.delete(id); else chosenCats.add(id);
+                el.startBtn.disabled = chosenCats.size === 0;
             });
         });
 
         el.startBtn.addEventListener('click', () => {
-            if (busy || !chosenCat) return;
-            post(routes.start, { category_id: Number(chosenCat) }).then(() => { chosenCat = null; });
+            if (busy || chosenCats.size === 0) return;
+            const ids = [...chosenCats].map(Number);
+            post(routes.start, { category_ids: ids }).then(() => clearChosen());
         });
         el.stopBtn.addEventListener('click', () => { if (!busy) post(routes.stop); });
 

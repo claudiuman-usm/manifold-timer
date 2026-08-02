@@ -42,11 +42,12 @@ class KidController extends Controller
     {
         $kid = $this->kid($request);
         $data = $request->validate([
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'category_ids' => ['required', 'array', 'min:1'],
+            'category_ids.*' => ['integer', 'distinct', 'exists:categories,id'],
         ]);
 
         try {
-            $this->cycle->startWork($kid, (int) $data['category_id']);
+            $this->cycle->startWork($kid, array_map('intval', $data['category_ids']));
         } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

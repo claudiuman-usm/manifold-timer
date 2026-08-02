@@ -3,6 +3,17 @@
 All notable changes to Manifold Timer are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] — 2026-08-02
+
+### Changed — kid timer device picker is now multi-select
+- On the kid timer, **"Pick what you're doing"** now lets a kid tap **all that
+  apply** (e.g. TV **and** iPad). Buttons toggle independently and **Start** is
+  enabled as soon as one is selected.
+- A multi-device session is stored as a single **combined label** (e.g.
+  `TV + iPad`), so it shows up as one row in the **Today** totals, **history**,
+  and the **parent dashboard**. No schema change — totals already group by the
+  session's category label.
+
 ## [1.6.1] — 2026-08-01
 
 ### Changed
